@@ -17,7 +17,7 @@ class ConfirmationCodeSerializer(serializers.Serializer):
     """Сериализатор кода подтверждения."""
 
     username = serializers.CharField(
-        max_length=30,
+        max_length=150,
         required=True
     )
     confirmation_code = serializers.CharField(
