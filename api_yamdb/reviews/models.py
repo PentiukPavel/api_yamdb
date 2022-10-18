@@ -1,4 +1,4 @@
-from django.core.validators import MaxValueValidator
+from django.core.validators import MinValueValidator, MaxValueValidator
 from datetime import datetime
 from django.db import models
 
@@ -98,3 +98,56 @@ class GenreTitle(models.Model):
 
     def __str__(self):
         return f'{self.title} {self.genre}'
+
+
+class Review(models.Model):
+    """Модель отзывов."""
+
+    title = models.ForeignKey(
+        Title,
+        on_delete=models.CASCADE,
+        related_name='reviews',
+        verbose_name='Произведение',
+    )
+    text = models.TextField(
+        'Текст отзыва',
+        blank=False,
+        null=False,
+    )
+    author = models.ForeignKey(
+        'users.User',
+        on_delete=models.CASCADE,
+        related_name='reviews',
+        verbose_name='Автор отзыва',
+    )
+    score = models.IntegerField(
+        'Оценка',
+        blank=False,
+        null=False,
+        validators=[
+            MinValueValidator(
+                1,
+                message='Оценка не может быть меньше 1.'
+            ),
+            MaxValueValidator(
+                10,
+                message='Оценка не может быть больше 10.'
+            ),
+        ]
+    )
+    pub_date = models.DateTimeField(
+        'Дата публикации',
+        auto_now_add=True,
+        db_index=True,
+    )
+
+    def __str__(self):
+        return f'{self.title} {self.author} {self.score}'
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['title', 'author'],
+                name='unique_review'
+            )
+        ]
