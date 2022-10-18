@@ -3,12 +3,19 @@ from http import HTTPStatus
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.shortcuts import get_object_or_404
-from rest_framework import mixins, permissions, viewsets
+from rest_framework import filters, mixins, permissions, viewsets
 from rest_framework.response import Response
+from rest_framework.pagination import LimitOffsetPagination
 from rest_framework_simplejwt.tokens import AccessToken
+from reviews.models import Category, Genre
 
 from .exceptions import TokenInvalidException
-from .serializers import ConfirmationCodeSerializer, UserSerializer
+from .serializers import (
+    ConfirmationCodeSerializer,
+    CategorySerializer,
+    GenreSerializer,
+    UserSerializer,
+)
 from .utils.send_mail import email_confirmation_code
 
 User = get_user_model()
@@ -66,3 +73,25 @@ class CreateTokenViewSet(mixins.CreateModelMixin,
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+
+
+class CategoryViewSet(viewsets.ModelViewSet):
+    """Вьюсет для Категорий."""
+
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    lookup_field = 'slug'
+    filter_backends = (filters.SearchFilter,)
+    search_fileds = ('name',)
+    pagination_class = (LimitOffsetPagination,)
+
+
+class GenreViewSet(viewsets.ModelViewSet):
+    """Вьюсет для Жанров."""
+
+    queryset = Genre.objects.all()
+    serializer_class = GenreSerializer
+    lookup_field = 'slug'
+    filter_backends = (filters.SearchFilter,)
+    search_fileds = ('name',)
+    pagination_class = (LimitOffsetPagination,)
