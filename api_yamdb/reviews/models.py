@@ -5,6 +5,7 @@ from django.db import models
 
 class Category(models.Model):
     """Модель для категорий."""
+
     name = models.CharField(
         'Название категории',
         max_length=256,
@@ -26,6 +27,7 @@ class Category(models.Model):
 
 class Genre(models.Model):
     """Модель для Жанров."""
+
     name = models.CharField(
         'Название жанра',
         max_length=256,
@@ -47,6 +49,7 @@ class Genre(models.Model):
 
 class Title(models.Model):
     """Модель для произведений."""
+
     name = models.CharField(
         'Название произведения',
         max_length=500,
@@ -151,3 +154,32 @@ class Review(models.Model):
                 name='unique_review'
             )
         ]
+
+
+class Comment(models.Model):
+    """Модель комментариев."""
+    review = models.ForeignKey(
+        Review,
+        on_delete=models.CASCADE,
+        related_name='comments',
+        verbose_name='Отзыв',
+    )
+    text = models.TextField(
+        'Текст комментария',
+        blank=False,
+        null=False,
+    )
+    author = models.ForeignKey(
+        'users.User',
+        on_delete=models.CASCADE,
+        related_name='comments',
+        verbose_name='Автор комментария',
+    )
+    pub_date = models.DateTimeField(
+        'Дата публикации',
+        auto_now_add=True,
+        db_index=True,
+    )
+
+    def __str__(self):
+        return f'{self.review} {self.author} {self.text}'
