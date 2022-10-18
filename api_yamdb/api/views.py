@@ -3,25 +3,24 @@ from http import HTTPStatus
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.shortcuts import get_object_or_404
-from rest_framework import mixins, permissions, viewsets
+from rest_framework import permissions, viewsets
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 
-from .exceptions import TokenInvalidException
+from .exceptions import ConfirmationCodeInvalidException
 from .serializers import ConfirmationCodeSerializer, UserSerializer
 from .utils.send_mail import email_confirmation_code
 
 User = get_user_model()
 
 
-class UserCreateViewSet(mixins.CreateModelMixin,
-                        viewsets.GenericViewSet):
+class UserCreateViewSet(viewsets.GenericViewSet):
     """Вьюсет для создания пользователей.
 
     После создания отправляет email с кодом подтверждения.
     """
 
-    queryset = User.objects.all()
+    # queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = (permissions.AllowAny,)
 
@@ -35,14 +34,12 @@ class UserCreateViewSet(mixins.CreateModelMixin,
             return Response(serializer.data, status=HTTPStatus.OK)
 
 
-class CreateTokenViewSet(mixins.CreateModelMixin,
-                         viewsets.GenericViewSet):
+class TokenCreateViewSet(viewsets.GenericViewSet):
     """Вьюсет для создания JWT токена.
 
     Токен будет создан если код подтверждения полученный по email валиден.
     """
 
-    queryset = User.objects.all()
     serializer_class = ConfirmationCodeSerializer
     permission_classes = (permissions.AllowAny,)
 
@@ -56,7 +53,7 @@ class CreateTokenViewSet(mixins.CreateModelMixin,
             user = get_object_or_404(User, username=username)
             if not default_token_generator.check_token(user,
                                                        confirmation_code):
-                raise TokenInvalidException(
+                raise ConfirmationCodeInvalidException(
                     'Время действия токена истекло или токен неверен')
             return Response(
                 {'token': str(AccessToken.for_user(user))},
