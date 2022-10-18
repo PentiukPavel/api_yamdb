@@ -9,7 +9,7 @@ from rest_framework_simplejwt.tokens import AccessToken
 
 from .exceptions import ConfirmationCodeInvalidException
 from .serializers import ConfirmationCodeSerializer, UserSerializer
-from .utils.send_mail import send_confirmation_code
+from .utils.auth_utils import send_confirmation_code
 
 User = get_user_model()
 
