@@ -156,8 +156,9 @@ class Review(models.Model):
         ]
 
 
-class Comment(models.Model):
+class Comments(models.Model):
     """Модель комментариев."""
+
     review = models.ForeignKey(
         Review,
         on_delete=models.CASCADE,
