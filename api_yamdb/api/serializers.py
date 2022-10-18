@@ -11,13 +11,15 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ('username', 'email', 'first_name',
                   'last_name', 'bio', 'role',)
+        extra_kwargs = {'username': {'required': True},
+                        'email': {'required': True}}
 
 
 class ConfirmationCodeSerializer(serializers.Serializer):
     """Сериализатор кода подтверждения."""
 
     username = serializers.CharField(
-        max_length=30,
+        max_length=150,
         required=True
     )
     confirmation_code = serializers.CharField(
