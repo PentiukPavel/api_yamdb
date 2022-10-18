@@ -20,4 +20,6 @@ class User(AbstractUser):
         blank=True,
     )
     role = models.PositiveSmallIntegerField(
-        choices=ROLE_CHOICES, blank=True, null=True)
+        choices=ROLE_CHOICES,
+        blank=True
+    )
