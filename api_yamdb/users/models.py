@@ -5,9 +5,9 @@ from django.db import models
 class User(AbstractUser):
     """Кастомизированная модель пользователя."""
 
-    USER = 1
-    MODERATOR = 2
-    ADMIN = 3
+    USER = 'user'
+    MODERATOR = 'moderator'
+    ADMIN = 'admin'
 
     ROLE_CHOICES = (
         (USER, 'user'),
@@ -19,9 +19,11 @@ class User(AbstractUser):
         'Биография',
         blank=True,
     )
-    role = models.PositiveSmallIntegerField(
+    role = models.CharField(
+        max_length=9,
         choices=ROLE_CHOICES,
         default=USER,
         blank=True,
         null=False,
     )
+    email = models.EmailField(unique=True, blank=True)

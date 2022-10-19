@@ -4,32 +4,49 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
-from rest_framework import filters, mixins, permissions, viewsets
+from rest_framework import filters, permissions, viewsets
+from rest_framework.pagination import (LimitOffsetPagination,
+                                       PageNumberPagination)
 from rest_framework.response import Response
-from rest_framework.pagination import LimitOffsetPagination
 from rest_framework_simplejwt.tokens import AccessToken
 from reviews.models import Category, Genre, Title
 
-from .exceptions import ConfirmationCodeInvalidException
-from .serializers import (
-    ConfirmationCodeSerializer,
-    CategorySerializer,
-    GenreSerializer,
-    TitleSerializer,
-    UserSerializer,
-)
+from .permissions import AdminPermission
+from .serializers import (CategorySerializer, ConfirmationCodeSerializer,
+                          GenreSerializer, UserRegisterSerializer,
+                          UserSerializer)
 from .utils.auth_utils import send_confirmation_code
 
 User = get_user_model()
 
 
-class UserCreateViewSet(viewsets.GenericViewSet):
-    """Вьюсет для создания пользователей.
+class CurrentUserViewSet(viewsets.ViewSet):
+    """Вьюсет для получения и обновления информации о текущем юзере."""
+
+    serializer_class = UserSerializer
+
+    def retrieve(self, request, pk=None):
+        serializer = self.serializer_class(request.user)
+        return Response(serializer.data)
+
+    def partial_update(self, request, pk=None):
+        request_data = request.data
+        if 'role' in request_data.keys() and request.user.role == 'user':
+            request_data.pop('role')
+        serializer = self.serializer_class(
+            request.user, data=request_data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=HTTPStatus.OK)
+
+
+class UserRegisterViewSet(viewsets.GenericViewSet):
+    """Вьюсет для самостоятельной регистрации пользователей.
 
     После создания отправляет email с кодом подтверждения.
     """
 
-    serializer_class = UserSerializer
+    serializer_class = UserRegisterSerializer
     permission_classes = (permissions.AllowAny,)
 
     def create(self, request):
@@ -62,8 +79,9 @@ class TokenCreateViewSet(viewsets.GenericViewSet):
 
         if not default_token_generator.check_token(
                 user, confirmation_code):
-            raise ConfirmationCodeInvalidException(
-                'Время действия токена истекло или токен неверен')
+            return Response(
+                {'error': 'Код подтверждения неверен или устарел'},
+                status=HTTPStatus.BAD_REQUEST)
         return Response(
             {'token': str(AccessToken.for_user(user))},
             status=HTTPStatus.OK)
@@ -72,6 +90,33 @@ class TokenCreateViewSet(viewsets.GenericViewSet):
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+    permission_classes = (AdminPermission, )
+    filter_backends = (filters.SearchFilter, )
+    pagination_class = PageNumberPagination
+    lookup_field = 'username'
+    search_fields = ('username',)
+
+
+class CategoryViewSet(viewsets.ModelViewSet):
+    """Вьюсет для Категорий."""
+
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    lookup_field = 'slug'
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name',)
+    pagination_class = LimitOffsetPagination
+
+
+class GenreViewSet(viewsets.ModelViewSet):
+    """Вьюсет для Жанров."""
+
+    queryset = Genre.objects.all()
+    serializer_class = GenreSerializer
+    lookup_field = 'slug'
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name',)
+    pagination_class = LimitOffsetPagination
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
