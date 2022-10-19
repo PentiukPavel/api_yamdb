@@ -83,6 +83,22 @@ class Title(models.Model):
         Genre,
         through='GenreTitle',
     )
+    rating = models.IntegerField(
+        'Рейтинг произведения',
+        blank=False,
+        null=False,
+        default=0,
+        validators=[
+            MaxValueValidator(
+                10,
+                message='Рейтинг не может быть больше 10.'
+            ),
+            MaxValueValidator(
+                0,
+                message='Рейтинг не может быть меньше 0.'
+            )
+        ]
+    )
 
     def __str__(self):
         return self.name
