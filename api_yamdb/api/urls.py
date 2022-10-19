@@ -7,19 +7,19 @@ user_create = views.UserRegisterViewSet.as_view(
     {'post': 'create', })
 token_create = views.TokenCreateViewSet.as_view(
     {'post': 'create', })
-current_user_get_patch = views.CurrentUserViewSet.as_view(
+current_user_get_update = views.CurrentUserViewSet.as_view(
     {'get': 'retrieve',
      'patch': 'partial_update'},)
 
 
 v1_router = DefaultRouter()
-v1_router.register('users', views.UserViewSet, basename='users')
+v1_router.register(r'users', views.UserViewSet, basename='users')
 v1_router.register(r'categories', views.CategoryViewSet, basename='categories')
 v1_router.register(r'genres', views.GenreViewSet, basename='genres')
 
 urlpatterns = [
     path('v1/users/me/',
-         current_user_get_patch,
+         current_user_get_update,
          name='me',
          ),
     path('v1/auth/signup/',

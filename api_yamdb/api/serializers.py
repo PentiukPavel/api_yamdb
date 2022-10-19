@@ -6,9 +6,21 @@ User = get_user_model()
 
 
 class UserRegisterSerializer(serializers.ModelSerializer):
+    """Сериализатор пользователя при самостоятельное регистрации.
+
+    Позволяет создать пользователя только с разрешенными полями.
+    """
     class Meta:
         model = User
         fields = ('username', 'email',)
+        extra_kwargs = {'username': {'required': True},
+                        'email': {'required': True}}
+
+    def validate_username(self, username):
+        if username == 'me':
+            raise serializers.ValidationError(
+                'Выберите другой юзернейм')
+        return username
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -24,8 +36,7 @@ class UserSerializer(serializers.ModelSerializer):
     def validate_username(self, username):
         if username == 'me':
             raise serializers.ValidationError(
-                'Выберите другой юзернейм'
-            )
+                'Выберите другой юзернейм')
         return username
 
 

@@ -4,7 +4,8 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.shortcuts import get_object_or_404
 from rest_framework import filters, permissions, viewsets
-from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.pagination import (LimitOffsetPagination,
+                                       PageNumberPagination)
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 from reviews.models import Category, Genre
@@ -19,6 +20,8 @@ User = get_user_model()
 
 
 class CurrentUserViewSet(viewsets.ViewSet):
+    """Вьюсет для получения и обновления информации о текущем юзере."""
+
     serializer_class = UserSerializer
 
     def retrieve(self, request, pk=None):
@@ -26,8 +29,11 @@ class CurrentUserViewSet(viewsets.ViewSet):
         return Response(serializer.data)
 
     def partial_update(self, request, pk=None):
+        request_data = request.data
+        if 'role' in request_data.keys() and request.user.role == 'user':
+            request_data.pop('role')
         serializer = self.serializer_class(
-            request.user, data=request.data, partial=True)
+            request.user, data=request_data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=HTTPStatus.OK)
@@ -84,7 +90,32 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = (AdminPermission, )
+    filter_backends = (filters.SearchFilter, )
+    pagination_class = PageNumberPagination
     lookup_field = 'username'
+    search_fields = ('username',)
+
+
+class CategoryViewSet(viewsets.ModelViewSet):
+    """Вьюсет для Категорий."""
+
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    lookup_field = 'slug'
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name',)
+    pagination_class = LimitOffsetPagination
+
+
+class GenreViewSet(viewsets.ModelViewSet):
+    """Вьюсет для Жанров."""
+
+    queryset = Genre.objects.all()
+    serializer_class = GenreSerializer
+    lookup_field = 'slug'
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name',)
+    pagination_class = LimitOffsetPagination
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
@@ -106,26 +137,4 @@ class GenreViewSet(viewsets.ModelViewSet):
     lookup_field = 'slug'
     filter_backends = (filters.SearchFilter,)
     search_fileds = ('name',)
-    pagination_class = (LimitOffsetPagination,)
-
-
-class CategoryViewSet(viewsets.ModelViewSet):
-    """Вьюсет для Категорий."""
-
-    queryset = Category.objects.all()
-    serializer_class = CategorySerializer
-    lookup_field = 'slug'
-    filter_backends = (filters.SearchFilter,)
-    search_fileds = ('name',)
-    pagination_class = (LimitOffsetPagination,)
-
-
-class GenreViewSet(viewsets.ModelViewSet):
-    """Вьюсет для Жанров."""
-
-    queryset = Genre.objects.all()
-    serializer_class = GenreSerializer
-    lookup_field = 'slug'
-    filter_backends = (filters.SearchFilter,)
-    search_fileds = ('name',)
-    pagination_class = (LimitOffsetPagination,)
+    pagination_class = LimitOffsetPagination

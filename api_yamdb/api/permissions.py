@@ -3,7 +3,7 @@ from users.models import User
 
 
 class AdminPermission(permissions.BasePermission):
-    """Разрешает просмотр и редактирование объектов только админу."""
+    """Разрешает просмотр и редактирование объектов только админу и выше."""
 
     def has_permission(self, request, view):
         return (request.user.is_authenticated
