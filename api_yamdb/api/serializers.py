@@ -64,7 +64,7 @@ class TitleSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def create(self, validated_data):
-        category = validated_data.get('category')
+        category = validated_data.pop('category')
         title_category, status = Category.objects.get_or_create(**category)
         genres = validated_data.pop('genre')
         title = Title.objects.create(category=title_category, **validated_data)

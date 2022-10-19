@@ -2,18 +2,20 @@ from http import HTTPStatus
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
+from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
 from rest_framework import filters, mixins, permissions, viewsets
 from rest_framework.response import Response
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework_simplejwt.tokens import AccessToken
-from reviews.models import Category, Genre
+from reviews.models import Category, Genre, Title
 
 from .exceptions import ConfirmationCodeInvalidException
 from .serializers import (
     ConfirmationCodeSerializer,
     CategorySerializer,
     GenreSerializer,
+    TitleSerializer,
     UserSerializer,
 )
 from .utils.auth_utils import send_confirmation_code
@@ -80,7 +82,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
     lookup_field = 'slug'
     filter_backends = (filters.SearchFilter,)
     search_fileds = ('name',)
-    pagination_class = (LimitOffsetPagination,)
+    pagination_class = LimitOffsetPagination
 
 
 class GenreViewSet(viewsets.ModelViewSet):
@@ -91,4 +93,14 @@ class GenreViewSet(viewsets.ModelViewSet):
     lookup_field = 'slug'
     filter_backends = (filters.SearchFilter,)
     search_fileds = ('name',)
-    pagination_class = (LimitOffsetPagination,)
+    pagination_class = LimitOffsetPagination
+
+
+class TitleViewSet(viewsets.ModelViewSet):
+    """Вьюсет для произведений."""
+
+    queryset = Title.objects.all()
+    serializer_class = TitleSerializer
+    pagination_class = LimitOffsetPagination
+    filter_backends = (DjangoFilterBackend,)
+    filterset_fields = ('name', 'year', 'category__name', 'genre__name')
