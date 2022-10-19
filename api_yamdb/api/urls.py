@@ -4,7 +4,7 @@ from rest_framework.routers import DefaultRouter
 from . import views
 
 user_create = views.UserCreateViewSet.as_view({'post': 'create', })
-token_create = views.CreateTokenViewSet.as_view({'post': 'create', })
+token_create = views.TokenCreateViewSet.as_view({'post': 'create', })
 
 v1_router = DefaultRouter()
 v1_router.register('users', views.UserViewSet, basename='users')

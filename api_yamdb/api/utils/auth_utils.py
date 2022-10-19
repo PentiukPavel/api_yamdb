@@ -1,7 +1,7 @@
 from django.core.mail import send_mail
 
 
-def email_confirmation_code(user_email, confirmation_code):
+def send_confirmation_code(user_email, confirmation_code):
     """Отправляет почту через выбранный email backend."""
     send_mail(
         subject='Код подтверждения для получения токена',
