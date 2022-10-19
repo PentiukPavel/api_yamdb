@@ -2,8 +2,8 @@ from http import HTTPStatus
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
-from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, permissions, viewsets
 from rest_framework.pagination import (LimitOffsetPagination,
                                        PageNumberPagination)
@@ -13,8 +13,8 @@ from reviews.models import Category, Genre, Title
 
 from .permissions import AdminPermission
 from .serializers import (CategorySerializer, ConfirmationCodeSerializer,
-                          GenreSerializer, UserRegisterSerializer,
-                          UserSerializer)
+                          GenreSerializer, TitleSerializer,
+                          UserRegisterSerializer, UserSerializer)
 from .utils.auth_utils import send_confirmation_code
 
 User = get_user_model()
