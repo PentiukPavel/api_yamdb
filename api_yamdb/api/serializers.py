@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
+from reviews.models import Category, Genre
 
 User = get_user_model()
 
@@ -39,3 +40,27 @@ class ConfirmationCodeSerializer(serializers.Serializer):
         max_length=150,
         required=True
     )
+
+
+class CategorySerializer(serializers.HyperlinkedModelSerializer):
+    """Сериалайзер категорий."""
+
+    class Meta:
+        model = Category
+        fields = ('name', 'slug',)
+        lookup_field = 'slug'
+        extra_kwargs = {
+            'url': {'lookup_field': 'slug'}
+        }
+
+
+class GenreSerializer(serializers.HyperlinkedModelSerializer):
+    """Сериалайзер жанров."""
+
+    class Meta:
+        model = Genre
+        fields = ('name', 'slug',)
+        lookup_field = ('slug')
+        extra_kwargs = {
+            'url': {'lookup_field': 'slug'}
+        }

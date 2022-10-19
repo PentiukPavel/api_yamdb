@@ -14,6 +14,8 @@ current_user_get_patch = views.CurrentUserViewSet.as_view(
 
 v1_router = DefaultRouter()
 v1_router.register('users', views.UserViewSet, basename='users')
+v1_router.register(r'categories', views.CategoryViewSet, basename='categories')
+v1_router.register(r'genres', views.GenreViewSet, basename='genres')
 
 urlpatterns = [
     path('v1/users/me/',
