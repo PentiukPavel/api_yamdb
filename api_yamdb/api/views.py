@@ -7,20 +7,36 @@ from rest_framework import permissions, viewsets
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 
-from .exceptions import ConfirmationCodeInvalidException
-from .serializers import ConfirmationCodeSerializer, UserSerializer
+from .permissions import AdminPermission
+from .serializers import (ConfirmationCodeSerializer, UserRegisterSerializer,
+                          UserSerializer)
 from .utils.auth_utils import send_confirmation_code
 
 User = get_user_model()
 
 
-class UserCreateViewSet(viewsets.GenericViewSet):
-    """Вьюсет для создания пользователей.
+class CurrentUserViewSet(viewsets.ViewSet):
+    serializer_class = UserSerializer
+
+    def retrieve(self, request, pk=None):
+        serializer = self.serializer_class(request.user)
+        return Response(serializer.data)
+
+    def partial_update(self, request, pk=None):
+        serializer = self.serializer_class(
+            request.user, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=HTTPStatus.OK)
+
+
+class UserRegisterViewSet(viewsets.GenericViewSet):
+    """Вьюсет для самостоятельной регистрации пользователей.
 
     После создания отправляет email с кодом подтверждения.
     """
 
-    serializer_class = UserSerializer
+    serializer_class = UserRegisterSerializer
     permission_classes = (permissions.AllowAny,)
 
     def create(self, request):
@@ -53,8 +69,9 @@ class TokenCreateViewSet(viewsets.GenericViewSet):
 
         if not default_token_generator.check_token(
                 user, confirmation_code):
-            raise ConfirmationCodeInvalidException(
-                'Время действия токена истекло или токен неверен')
+            return Response(
+                {'error': 'Код подтверждения неверен или устарел'},
+                status=HTTPStatus.BAD_REQUEST)
         return Response(
             {'token': str(AccessToken.for_user(user))},
             status=HTTPStatus.OK)
@@ -63,3 +80,5 @@ class TokenCreateViewSet(viewsets.GenericViewSet):
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+    permission_classes = (AdminPermission, )
+    lookup_field = 'username'
