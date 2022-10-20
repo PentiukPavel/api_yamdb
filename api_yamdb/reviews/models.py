@@ -33,7 +33,6 @@ class Genre(models.Model):
         max_length=256,
         blank=False,
         null=False,
-        unique=True,
     )
     slug = models.SlugField(
         'Слаг имени жанра',
@@ -86,8 +85,7 @@ class Title(models.Model):
     rating = models.IntegerField(
         'Рейтинг произведения',
         blank=False,
-        null=False,
-        default=0,
+        null=True,
         validators=[
             MaxValueValidator(
                 10,
@@ -108,11 +106,13 @@ class GenreTitle(models.Model):
     """Модель для связи произведения и жанра."""
     title = models.ForeignKey(
         Title,
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        related_name='title'
     )
     genre = models.ForeignKey(
         Genre,
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        related_name='genre'
     )
 
     def __str__(self):
