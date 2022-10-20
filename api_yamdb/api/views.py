@@ -102,6 +102,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     pagination_class = LimitOffsetPagination
+    permission_classes = (AdminSuperuserOnly, )
 
 
 class GenreViewSet(viewsets.ModelViewSet):
@@ -113,28 +114,7 @@ class GenreViewSet(viewsets.ModelViewSet):
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     pagination_class = LimitOffsetPagination
-
-
-class CategoryViewSet(viewsets.ModelViewSet):
-    """Вьюсет для Категорий."""
-
-    queryset = Category.objects.all()
-    serializer_class = CategorySerializer
-    lookup_field = 'slug'
-    filter_backends = (filters.SearchFilter,)
-    search_fileds = ('name',)
-    pagination_class = LimitOffsetPagination
-
-
-class GenreViewSet(viewsets.ModelViewSet):
-    """Вьюсет для Жанров."""
-
-    queryset = Genre.objects.all()
-    serializer_class = GenreSerializer
-    lookup_field = 'slug'
-    filter_backends = (filters.SearchFilter,)
-    search_fileds = ('name',)
-    pagination_class = LimitOffsetPagination
+    permission_classes = (AdminSuperuserOnly, )
 
 
 class TitleViewSet(viewsets.ModelViewSet):
