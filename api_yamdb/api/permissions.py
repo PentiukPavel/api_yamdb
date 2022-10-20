@@ -2,7 +2,7 @@ from rest_framework import permissions
 from users.models import User
 
 
-class AdminSuperuser(permissions.BasePermission):
+class AdminSuperuserOnly(permissions.BasePermission):
     """Дает доступ только админу и суперюзеру джанго."""
 
     def has_permission(self, request, view):
@@ -18,7 +18,7 @@ class AnonymousUserReadOnly(permissions.BasePermission):
         return request.method in permissions.SAFE_METHODS
 
 
-class AdminSuperuserAuthor(permissions.BasePermission):
+class AdminSuperuserAuthorOnly(permissions.BasePermission):
     """Дает полный доступ к объекту только админу, суперюзеру и автору."""
 
     def has_object_permission(self, request, view, obj):

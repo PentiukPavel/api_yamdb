@@ -10,7 +10,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 from reviews.models import Category, Genre, Title
 
-from .permissions import AdminSuperuser
+from .permissions import AdminSuperuserOnly
 from .serializers import (CategorySerializer, ConfirmationCodeSerializer,
                           GenreSerializer, TitleSerializer,
                           UserRegisterSerializer, UserSerializer)
@@ -87,7 +87,7 @@ class TokenCreateViewSet(viewsets.GenericViewSet):
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = (AdminSuperuser, )
+    permission_classes = (AdminSuperuserOnly, )
     filter_backends = (filters.SearchFilter, )
     lookup_field = 'username'
     search_fields = ('username',)
