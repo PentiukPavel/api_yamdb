@@ -5,13 +5,12 @@ from django.contrib.auth.tokens import default_token_generator
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, permissions, viewsets
-from rest_framework.pagination import (LimitOffsetPagination,
-                                       PageNumberPagination)
+from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 from reviews.models import Category, Genre, Title
 
-from .permissions import AdminPermission
+from .permissions import AdminSuperuser
 from .serializers import (CategorySerializer, ConfirmationCodeSerializer,
                           GenreSerializer, TitleSerializer,
                           UserRegisterSerializer, UserSerializer)
@@ -31,12 +30,10 @@ class CurrentUserViewSet(viewsets.ViewSet):
 
     def partial_update(self, request, pk=None):
         request_data = request.data
-        if 'role' in request_data.keys() and request.user.role == 'user':
-            request_data.pop('role')
         serializer = self.serializer_class(
             request.user, data=request_data, partial=True)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        serializer.save(role=request.user.role)
         return Response(serializer.data, status=HTTPStatus.OK)
 
 
@@ -90,9 +87,8 @@ class TokenCreateViewSet(viewsets.GenericViewSet):
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = (AdminPermission, )
+    permission_classes = (AdminSuperuser, )
     filter_backends = (filters.SearchFilter, )
-    pagination_class = PageNumberPagination
     lookup_field = 'username'
     search_fields = ('username',)
 
