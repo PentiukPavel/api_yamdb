@@ -85,8 +85,7 @@ class Title(models.Model):
     rating = models.IntegerField(
         'Рейтинг произведения',
         blank=False,
-        null=False,
-        default=0,
+        null=True,
         validators=[
             MaxValueValidator(
                 10,
