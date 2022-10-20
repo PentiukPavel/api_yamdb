@@ -3,16 +3,17 @@ from http import HTTPStatus
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.shortcuts import get_object_or_404
-from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, permissions, viewsets
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 from reviews.models import Category, Genre, Title
 
-from .permissions import AdminSuperuserOnly
+from .filters import MyFilterBackend
+from .permissions import AdminSuperuserOnly, AdminSuperuserModeratorAuthorOnly
 from .serializers import (CategorySerializer, ConfirmationCodeSerializer,
-                          GenreSerializer, TitleSerializer,
+                          GenreSerializer, TitleSerializerGet,
+                          TitleSerializerPost,
                           UserRegisterSerializer, UserSerializer)
 from .utils.auth_utils import send_confirmation_code
 
@@ -102,7 +103,11 @@ class CategoryViewSet(viewsets.ModelViewSet):
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     pagination_class = LimitOffsetPagination
-    permission_classes = (AdminSuperuserOnly, )
+
+    def get_permissions(self):
+        if self.request.method in permissions.SAFE_METHODS:
+            return (permissions.IsAuthenticatedOrReadOnly(),)
+        return (AdminSuperuserOnly(), )
 
 
 class GenreViewSet(viewsets.ModelViewSet):
@@ -114,14 +119,24 @@ class GenreViewSet(viewsets.ModelViewSet):
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     pagination_class = LimitOffsetPagination
-    permission_classes = (AdminSuperuserOnly, )
+
+    def get_permissions(self):
+        if self.request.method in permissions.SAFE_METHODS:
+            return (permissions.IsAuthenticatedOrReadOnly(),)
+        return (AdminSuperuserOnly(), )
 
 
 class TitleViewSet(viewsets.ModelViewSet):
     """Вьюсет для произведений."""
-
     queryset = Title.objects.all()
-    serializer_class = TitleSerializer
     pagination_class = LimitOffsetPagination
-    filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('name', 'year', 'category__name', 'genre__name')
+    filter_backends = [MyFilterBackend]
+    filterset_fields = ('name', 'year', 'category', 'genre,')
+    permission_classes = (AdminSuperuserModeratorAuthorOnly, )
+
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return TitleSerializerGet
+        if self.action == 'retrieve':
+            return TitleSerializerGet
+        return TitleSerializerPost
