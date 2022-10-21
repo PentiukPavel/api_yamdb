@@ -3,7 +3,7 @@ from http import HTTPStatus
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.shortcuts import get_object_or_404
-from rest_framework import filters, permissions, viewsets
+from rest_framework import filters, permissions, viewsets, mixins
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
@@ -105,7 +105,10 @@ class UserViewSet(viewsets.ModelViewSet):
     search_fields = ('username',)
 
 
-class CategoryViewSet(viewsets.ModelViewSet):
+class CategoryViewSet(mixins.CreateModelMixin,
+                      mixins.DestroyModelMixin,
+                      mixins.ListModelMixin,
+                      viewsets.GenericViewSet):
     """Вьюсет для Категорий."""
 
     queryset = Category.objects.all()
@@ -117,7 +120,10 @@ class CategoryViewSet(viewsets.ModelViewSet):
     permission_classes = (AnonymousUserReadOnly | AdminSuperuserOnly,)
 
 
-class GenreViewSet(viewsets.ModelViewSet):
+class GenreViewSet(mixins.CreateModelMixin,
+                   mixins.DestroyModelMixin,
+                   mixins.ListModelMixin,
+                   viewsets.GenericViewSet):
     """Вьюсет для Жанров."""
 
     queryset = Genre.objects.all()
