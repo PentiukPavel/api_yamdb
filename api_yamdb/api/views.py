@@ -10,11 +10,11 @@ from rest_framework_simplejwt.tokens import AccessToken
 from reviews.models import Category, Genre, Title
 
 from .filters import MyFilterBackend
-from .permissions import AdminSuperuserOnly, AdminSuperuserModeratorAuthorOnly
+from .permissions import AdminSuperuserOnly, AnonymousUserReadOnly
 from .serializers import (CategorySerializer, ConfirmationCodeSerializer,
                           GenreSerializer, TitleSerializerGet,
-                          TitleSerializerPost,
-                          UserRegisterSerializer, UserSerializer)
+                          TitleSerializerPost, UserRegisterSerializer,
+                          UserSerializer)
 from .utils.auth_utils import send_confirmation_code
 
 User = get_user_model()
@@ -103,11 +103,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     pagination_class = LimitOffsetPagination
-
-    def get_permissions(self):
-        if self.request.method in permissions.SAFE_METHODS:
-            return (permissions.IsAuthenticatedOrReadOnly(),)
-        return (AdminSuperuserOnly(), )
+    permission_classes = (AnonymousUserReadOnly | AdminSuperuserOnly,)
 
 
 class GenreViewSet(viewsets.ModelViewSet):
@@ -119,11 +115,7 @@ class GenreViewSet(viewsets.ModelViewSet):
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     pagination_class = LimitOffsetPagination
-
-    def get_permissions(self):
-        if self.request.method in permissions.SAFE_METHODS:
-            return (permissions.IsAuthenticatedOrReadOnly(),)
-        return (AdminSuperuserOnly(), )
+    permission_classes = (AnonymousUserReadOnly | AdminSuperuserOnly,)
 
 
 class TitleViewSet(viewsets.ModelViewSet):
@@ -132,7 +124,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     pagination_class = LimitOffsetPagination
     filter_backends = [MyFilterBackend]
     filterset_fields = ('name', 'year', 'category', 'genre,')
-    permission_classes = (AdminSuperuserModeratorAuthorOnly, )
+    permission_classes = (AnonymousUserReadOnly | AdminSuperuserOnly,)
 
     def get_serializer_class(self):
         if self.action == 'list':
