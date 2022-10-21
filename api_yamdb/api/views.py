@@ -8,8 +8,8 @@ from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 from reviews.models import Category, Genre, Title
+from users.models import User as UserModel
 
-from .exceptions import EmailException
 from .filters import MyFilterBackend
 from .permissions import AdminSuperuserOnly, AnonymousUserReadOnly
 from .serializers import (CategorySerializer, ConfirmationCodeSerializer,
@@ -31,11 +31,13 @@ class CurrentUserViewSet(viewsets.ViewSet):
         return Response(serializer.data)
 
     def partial_update(self, request, pk=None):
-        request_data = request.data
         serializer = self.serializer_class(
-            request.user, data=request_data, partial=True)
+            request.user, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
-        serializer.save(role=request.user.role)
+        if request.user.role == UserModel.ADMIN:
+            serializer.save()
+        else:
+            serializer.save(role=request.user.role)
         return Response(serializer.data, status=HTTPStatus.OK)
 
 
@@ -49,19 +51,20 @@ class UserRegisterViewSet(viewsets.GenericViewSet):
     permission_classes = (permissions.AllowAny,)
 
     def create(self, request):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        username = request.data.get('username')
+        email = request.data.get('email')
 
-        user, _ = User.objects.get_or_create(**serializer.validated_data)
+        if User.objects.filter(username=username, email=email).exists():
+            user = User.objects.get(username=username, email=email)
+            serializer = self.get_serializer(user)
+        else:
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            user = serializer.save()
+
         confirmation_code = default_token_generator.make_token(user)
-        try:
-            send_confirmation_code(user, confirmation_code)
-        except Exception as e:
-            user.delete()
-            raise EmailException(
-                'Не удалось отправить письмо с кодом подтверждения. '
-                'Пользователь не создан.'
-                f'Причина: {e}')
+        send_confirmation_code(user, confirmation_code)
+
         return Response(serializer.data, status=HTTPStatus.OK)
 
 
