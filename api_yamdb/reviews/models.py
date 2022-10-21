@@ -122,6 +122,12 @@ class GenreTitle(models.Model):
 class Review(models.Model):
     """Модель отзывов."""
 
+    author = models.ForeignKey(
+        'users.User',
+        on_delete=models.CASCADE,
+        related_name='reviews',
+        verbose_name='Автор отзыва',
+    )
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
@@ -132,12 +138,6 @@ class Review(models.Model):
         'Текст отзыва',
         blank=False,
         null=False,
-    )
-    author = models.ForeignKey(
-        'users.User',
-        on_delete=models.CASCADE,
-        related_name='reviews',
-        verbose_name='Автор отзыва',
     )
     score = models.IntegerField(
         'Оценка',
@@ -172,7 +172,7 @@ class Review(models.Model):
         ]
 
 
-class Comments(models.Model):
+class Comment(models.Model):
     """Модель комментариев."""
 
     review = models.ForeignKey(

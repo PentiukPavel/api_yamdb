@@ -39,3 +39,16 @@ class AdminSuperuserModeratorAuthorOnly(permissions.BasePermission):
                     or request.user.role == UserModel.ADMIN
                     or request.user.role == UserModel.MODERATOR
                     or request.user == obj.author))
+
+
+class IsOwnerOrReadOnly(permissions.BasePermission):
+    """Дает доступ к объекту только владельцу.
+
+    Доступ к списку и к объекту для чтения всем пользователям.
+    Доступ к редактированию только владельцу.
+    """
+
+    def has_object_permission(self, request, view, obj):
+        return (request.method in permissions.SAFE_METHODS
+                or (request.user.is_authenticated
+                    and request.user == obj.author))
