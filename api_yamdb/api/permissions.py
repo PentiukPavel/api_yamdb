@@ -1,5 +1,5 @@
 from rest_framework import permissions
-from users.models import User
+from users.models import User as UserModel
 
 
 class AdminSuperuserOnly(permissions.BasePermission):
@@ -10,7 +10,7 @@ class AdminSuperuserOnly(permissions.BasePermission):
 
     def has_permission(self, request, view):
         return (request.user.is_authenticated
-                and request.user.role == User.ADMIN
+                and request.user.role == UserModel.ADMIN
                 or request.user.is_superuser)
 
 
@@ -36,6 +36,6 @@ class AdminSuperuserModeratorAuthorOnly(permissions.BasePermission):
         return (request.method in permissions.SAFE_METHODS
                 or (request.user.is_authenticated
                     and request.user.is_superuser
-                    or request.user.role == User.ADMIN
-                    or request.user.role == User.MODERATOR
+                    or request.user.role == UserModel.ADMIN
+                    or request.user.role == UserModel.MODERATOR
                     or request.user == obj.author))

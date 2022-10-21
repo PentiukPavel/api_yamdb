@@ -26,4 +26,4 @@ class User(AbstractUser):
         blank=True,
         null=False,
     )
-    email = models.EmailField(unique=True, blank=True)
+    email = models.EmailField(unique=True)
