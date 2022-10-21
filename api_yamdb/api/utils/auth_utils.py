@@ -9,6 +9,6 @@ def send_confirmation_code(user: User, confirmation_code: str):
     send_mail(
         subject=f'Код подтверждения Yamdb для пользователя {user.username}',
         message=confirmation_code,
-        from_email=u'yamdb@test.com',
+        from_email='yamdb@test.com',
         recipient_list=[user.email, ],
         fail_silently=False,)
