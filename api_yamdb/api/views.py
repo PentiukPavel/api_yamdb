@@ -9,6 +9,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 from reviews.models import Category, Genre, Title
 
+from .exceptions import EmailException
 from .filters import MyFilterBackend
 from .permissions import AdminSuperuserOnly, AnonymousUserReadOnly
 from .serializers import (CategorySerializer, ConfirmationCodeSerializer,
@@ -53,7 +54,14 @@ class UserRegisterViewSet(viewsets.GenericViewSet):
 
         user, _ = User.objects.get_or_create(**serializer.validated_data)
         confirmation_code = default_token_generator.make_token(user)
-        send_confirmation_code(user.email, confirmation_code)
+        try:
+            send_confirmation_code(user, confirmation_code)
+        except Exception as e:
+            user.delete()
+            raise EmailException(
+                'Не удалось отправить письмо с кодом подтверждения. '
+                'Пользователь не создан.'
+                f'Причина: {e}')
         return Response(serializer.data, status=HTTPStatus.OK)
 
 
