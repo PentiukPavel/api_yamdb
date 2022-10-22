@@ -101,6 +101,8 @@ class TokenCreateViewSet(viewsets.GenericViewSet):
 
 
 class UserViewSet(viewsets.ModelViewSet):
+    """Вьюсет для получения и обновления информации о пользователях."""
+
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = (AdminSuperuserOnly, )
@@ -141,15 +143,11 @@ class GenreViewSet(mixins.CreateModelMixin,
 
 class TitleViewSet(viewsets.ModelViewSet):
     """Вьюсет для произведений."""
+    queryset = Title.objects.annotate(rating=Avg('reviews__score')).all()
     pagination_class = LimitOffsetPagination
-    filter_backends = [MyFilterBackend]
+    filter_backends = (MyFilterBackend,)
     filterset_fields = ('name', 'year', 'category', 'genre',)
     permission_classes = (AnonymousUserReadOnly | AdminSuperuserOnly,)
-
-    def get_queryset(self):
-        queryset = Title.objects.annotate(rating=Avg('reviews__score')).all()
-        # print(queryset[0].rating)
-        return queryset
 
     def get_serializer_class(self):
         if self.action in ['list', 'retrieve']:
@@ -169,6 +167,7 @@ class CommentViewSet(viewsets.ModelViewSet):
     pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
+        """Возвращает комментарии к отзывам."""
         title_id = self.kwargs.get('title_id')
         review_id = self.kwargs.get('review_id')
 
@@ -178,6 +177,7 @@ class CommentViewSet(viewsets.ModelViewSet):
         return review.comments.all()
 
     def perform_create(self, serializer):
+        """Добавление автора комментария и отзыв."""
         title_id = self.kwargs.get('title_id')
         review_id = self.kwargs.get('review_id')
 
@@ -198,12 +198,14 @@ class ReviewViewSet(viewsets.ModelViewSet):
     pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
+        """Возвращает отзывы к произведению."""
         title_id = self.kwargs.get('title_id')
 
         title = get_object_or_404(Title, id=title_id)
         return title.reviews.all()
 
     def perform_create(self, serializer):
+        """Добавление автора отзыва и произведения."""
         title_id = self.kwargs.get('title_id')
 
         title = get_object_or_404(Title, id=title_id)
