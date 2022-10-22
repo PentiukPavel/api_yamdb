@@ -1,6 +1,10 @@
-from django.core.validators import MinValueValidator, MaxValueValidator
 from datetime import datetime
+
+from django.contrib.auth import get_user_model
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+
+User = get_user_model()
 
 
 class Category(models.Model):
@@ -123,7 +127,7 @@ class Review(models.Model):
     """Модель отзывов."""
 
     author = models.ForeignKey(
-        'users.User',
+        User,
         on_delete=models.CASCADE,
         related_name='reviews',
         verbose_name='Автор отзыва',
@@ -163,13 +167,13 @@ class Review(models.Model):
     def __str__(self):
         return f'{self.title} {self.author} {self.score}'
 
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=['title', 'author'],
-                name='unique_review'
-            )
-        ]
+    # class Meta:
+    #     constraints = [
+    #         models.UniqueConstraint(
+    #             fields=['title', 'author'],
+    #             name='unique_review'
+    #         )
+    #     ]
 
 
 class Comment(models.Model):
@@ -187,7 +191,7 @@ class Comment(models.Model):
         null=False,
     )
     author = models.ForeignKey(
-        'users.User',
+        User,
         on_delete=models.CASCADE,
         related_name='comments',
         verbose_name='Автор комментария',

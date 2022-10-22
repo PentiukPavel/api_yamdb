@@ -3,24 +3,23 @@ from http import HTTPStatus
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.shortcuts import get_object_or_404
-from rest_framework import filters, permissions, viewsets, mixins
+from rest_framework import filters, mixins, permissions, viewsets
 from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
-
 from reviews.models import Category, Genre, Title
 from users.models import User as UserModel
 
 from .filters import MyFilterBackend
-from .permissions import (AdminSuperuserOnly, AnonymousUserReadOnly, AdminSuperuserModeratorAuthorOnly)
-from .serializers import (CategorySerializer, ConfirmationCodeSerializer,
-                          CommentSerializer,
-                          GenreSerializer, TitleSerializerGet,
+from .permissions import (AdminSuperuserModeratorAuthorOnly,
+                          AdminSuperuserOnly, AnonymousUserReadOnly)
+from .serializers import (CategorySerializer, CommentSerializer,
+                          ConfirmationCodeSerializer, GenreSerializer,
+                          ReviewSerializer, TitleSerializerGet,
                           TitleSerializerPost, UserRegisterSerializer,
-                          UserSerializer, ReviewSerializer)
+                          UserSerializer)
 from .utils.auth_utils import send_confirmation_code
-
 
 User = get_user_model()
 
@@ -177,7 +176,7 @@ class CommentViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         title_id = self.kwargs.get('title_id')
         review_id = self.kwargs.get('review_id')
-    
+
         title = get_object_or_404(Title, id=title_id)
         review = title.reviews.get(id=review_id)
 
