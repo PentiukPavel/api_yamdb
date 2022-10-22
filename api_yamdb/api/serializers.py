@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
-from reviews.models import Category, Genre, Title, Comment, Review
+from reviews.models import Category, Comment, Genre, Review, Title
 
 User = get_user_model()
 
@@ -134,7 +134,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         if Review.objects.filter(author=user, title=title).exists():
             raise serializers.ValidationError(
                 'Вы уже оставили отзыв на этот произведение')
-        return data 
+        return data
 
     class Meta:
         model = Review
