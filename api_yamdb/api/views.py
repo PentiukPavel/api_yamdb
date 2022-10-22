@@ -3,6 +3,7 @@ from http import HTTPStatus
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.shortcuts import get_object_or_404
+from django.db.models import Avg
 from rest_framework import filters, mixins, permissions, viewsets
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
@@ -140,17 +141,20 @@ class GenreViewSet(mixins.CreateModelMixin,
 
 class TitleViewSet(viewsets.ModelViewSet):
     """Вьюсет для произведений."""
-    queryset = Title.objects.all()
     pagination_class = LimitOffsetPagination
     filter_backends = [MyFilterBackend]
     filterset_fields = ('name', 'year', 'category', 'genre',)
     permission_classes = (AnonymousUserReadOnly | AdminSuperuserOnly,)
 
+    def get_queryset(self):
+        queryset = Title.objects.annotate(rating=Avg('reviews__score')).all()
+        # print(queryset[0].rating)
+        return queryset
+
     def get_serializer_class(self):
-        if self.action == 'list':
+        if self.action in ['list', 'retrieve']:
             return TitleSerializerGet
-        if self.action == 'retrieve':
-            return TitleSerializerGet
+
         return TitleSerializerPost
 
 

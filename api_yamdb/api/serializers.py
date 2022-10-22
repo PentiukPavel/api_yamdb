@@ -99,6 +99,7 @@ class TitleSerializerGet(serializers.ModelSerializer):
 
     genre = GenreSerializer(many=True)
     category = CategorySerializer()
+    rating = serializers.IntegerField()
 
     class Meta:
         model = Title
@@ -127,14 +128,16 @@ class ReviewSerializer(serializers.ModelSerializer):
         read_only=True
     )
 
-    def validate(self, data):
-        """Проверка на уникальность отзыва."""
+    def create(self, validated_data):
+        """Проверка на наличие отзыва от пользователя."""
         user = self.context['request'].user
-        title = self.context['view'].kwargs['title_id']
+        title = validated_data.get('title')
+
         if Review.objects.filter(author=user, title=title).exists():
             raise serializers.ValidationError(
                 'Вы уже оставили отзыв на этот произведение')
-        return data
+
+        return Review.objects.create(**validated_data)
 
     class Meta:
         model = Review
