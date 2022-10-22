@@ -7,16 +7,20 @@ from rest_framework import filters, permissions, viewsets, mixins
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
+
 from reviews.models import Category, Genre, Title
 from users.models import User as UserModel
 
 from .filters import MyFilterBackend
-from .permissions import AdminSuperuserOnly, AnonymousUserReadOnly
+from .permissions import (AdminSuperuserOnly, AnonymousUserReadOnly, AdminSuperuserModeratorAuthorOnly)
 from .serializers import (CategorySerializer, ConfirmationCodeSerializer,
+                          CommentSerializer,
                           GenreSerializer, TitleSerializerGet,
                           TitleSerializerPost, UserRegisterSerializer,
-                          UserSerializer)
+                          UserSerializer, ReviewSerializer)
 from .utils.auth_utils import send_confirmation_code
+
 
 User = get_user_model()
 
@@ -140,7 +144,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     pagination_class = LimitOffsetPagination
     filter_backends = [MyFilterBackend]
-    filterset_fields = ('name', 'year', 'category', 'genre,')
+    filterset_fields = ('name', 'year', 'category', 'genre',)
     permission_classes = (AnonymousUserReadOnly | AdminSuperuserOnly,)
 
     def get_serializer_class(self):
@@ -149,3 +153,55 @@ class TitleViewSet(viewsets.ModelViewSet):
         if self.action == 'retrieve':
             return TitleSerializerGet
         return TitleSerializerPost
+
+
+class CommentViewSet(viewsets.ModelViewSet):
+    """Вьюсет для комментариев к произведениям."""
+
+    serializer_class = CommentSerializer
+    permission_classes = (
+        IsAuthenticatedOrReadOnly,
+        AdminSuperuserModeratorAuthorOnly
+    )
+    pagination_class = LimitOffsetPagination
+
+    def get_queryset(self):
+        title_id = self.kwargs.get('title_id')
+        review_id = self.kwargs.get('review_id')
+
+        title = get_object_or_404(Title, id=title_id)
+        review = title.reviews.get(id=review_id)
+
+        return review.comments.all()
+
+    def perform_create(self, serializer):
+        title_id = self.kwargs.get('title_id')
+        review_id = self.kwargs.get('review_id')
+    
+        title = get_object_or_404(Title, id=title_id)
+        review = title.reviews.get(id=review_id)
+
+        serializer.save(author=self.request.user, review=review)
+
+
+class ReviewViewSet(viewsets.ModelViewSet):
+    """Вьюсет для отзывов к произведениям."""
+
+    serializer_class = ReviewSerializer
+    permission_classes = (
+        IsAuthenticatedOrReadOnly,
+        AdminSuperuserModeratorAuthorOnly,
+    )
+    pagination_class = LimitOffsetPagination
+
+    def get_queryset(self):
+        title_id = self.kwargs.get('title_id')
+
+        title = get_object_or_404(Title, id=title_id)
+        return title.reviews.all()
+
+    def perform_create(self, serializer):
+        title_id = self.kwargs.get('title_id')
+
+        title = get_object_or_404(Title, id=title_id)
+        serializer.save(author=self.request.user, title=title)
