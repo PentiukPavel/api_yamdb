@@ -3,6 +3,7 @@ from rest_framework.filters import BaseFilterBackend
 
 class MyFilterBackend(BaseFilterBackend):
     """Фильтр по произведениям."""
+
     def filter_queryset(self, request, queryset, view):
         if 'category' in request.query_params:
             queryset = queryset.filter(
