@@ -103,7 +103,7 @@ class TokenCreateViewSet(viewsets.GenericViewSet):
 class UserViewSet(viewsets.ModelViewSet):
     """Вьюсет для получения и обновления информации о пользователях."""
 
-    queryset = User.objects.all()
+    queryset = User.objects.all().order_by('date_joined')
     serializer_class = UserSerializer
     permission_classes = (AdminSuperuserOnly, )
     filter_backends = (filters.SearchFilter, )
