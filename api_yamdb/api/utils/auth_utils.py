@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
 
@@ -9,6 +10,6 @@ def send_confirmation_code(user: User, confirmation_code: str):
     send_mail(
         subject=f'Код подтверждения Yamdb для пользователя {user.username}',
         message=confirmation_code,
-        from_email='yamdb@test.com',
+        from_email=settings.YAMDB_EMAIL,
         recipient_list=[user.email, ],
         fail_silently=False,)
