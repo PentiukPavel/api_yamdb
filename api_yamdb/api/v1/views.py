@@ -21,7 +21,7 @@ from .serializers import (CategorySerializer, CommentSerializer,
                           ReviewSerializer, TitleSerializerGet,
                           TitleSerializerPost, UserRegisterSerializer,
                           UserSerializer)
-from .utils.auth_utils import send_confirmation_code
+from ..utils.auth_utils import send_confirmation_code
 
 User = get_user_model()
 
