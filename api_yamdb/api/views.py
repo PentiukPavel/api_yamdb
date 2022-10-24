@@ -2,9 +2,10 @@ from http import HTTPStatus
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
-from django.shortcuts import get_object_or_404
 from django.db.models import Avg
+from django.shortcuts import get_object_or_404
 from rest_framework import filters, mixins, permissions, viewsets
+from rest_framework.decorators import action
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
@@ -25,26 +26,6 @@ from .utils.auth_utils import send_confirmation_code
 User = get_user_model()
 
 
-class CurrentUserViewSet(viewsets.ViewSet):
-    """Вьюсет для получения и обновления информации о текущем юзере."""
-
-    serializer_class = UserSerializer
-
-    def retrieve(self, request, pk=None):
-        serializer = self.serializer_class(request.user)
-        return Response(serializer.data)
-
-    def partial_update(self, request, pk=None):
-        serializer = self.serializer_class(
-            request.user, data=request.data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        if request.user.role == UserModel.ADMIN:
-            serializer.save()
-        else:
-            serializer.save(role=request.user.role)
-        return Response(serializer.data, status=HTTPStatus.OK)
-
-
 class UserRegisterViewSet(viewsets.GenericViewSet):
     """Вьюсет для самостоятельной регистрации пользователей.
 
@@ -55,17 +36,9 @@ class UserRegisterViewSet(viewsets.GenericViewSet):
     permission_classes = (permissions.AllowAny,)
 
     def create(self, request):
-        username = request.data.get('username')
-        email = request.data.get('email')
-
-        if User.objects.filter(username=username, email=email).exists():
-            user = User.objects.get(username=username, email=email)
-            serializer = self.get_serializer(user)
-        else:
-            serializer = self.get_serializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            user = serializer.save()
-
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
         confirmation_code = default_token_generator.make_token(user)
         send_confirmation_code(user, confirmation_code)
 
@@ -109,6 +82,27 @@ class UserViewSet(viewsets.ModelViewSet):
     filter_backends = (filters.SearchFilter, )
     lookup_field = 'username'
     search_fields = ('username',)
+
+    @action(detail=False,
+            methods=['get', 'patch'],
+            url_path='me',
+            url_name='me',
+            permission_classes=(permissions.IsAuthenticated,))
+    def get_patch_current_user_data(self, request):
+        """Метод для получения и обновления информации о текущем юзере."""
+        if request.method == 'PATCH':
+            serializer = self.serializer_class(
+                request.user, data=request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            if request.user.role == UserModel.ADMIN:
+                serializer.save()
+            else:
+                serializer.save(role=request.user.role)
+
+        if request.method == 'GET':
+            serializer = self.serializer_class(request.user)
+
+        return Response(serializer.data, status=HTTPStatus.OK)
 
 
 class CategoryViewSet(mixins.CreateModelMixin,

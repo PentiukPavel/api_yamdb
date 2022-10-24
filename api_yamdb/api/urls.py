@@ -7,9 +7,6 @@ user_create = views.UserRegisterViewSet.as_view(
     {'post': 'create', })
 token_create = views.TokenCreateViewSet.as_view(
     {'post': 'create', })
-current_user_get_update = views.CurrentUserViewSet.as_view(
-    {'get': 'retrieve',
-     'patch': 'partial_update'},)
 
 
 v1_router = DefaultRouter()
@@ -29,10 +26,6 @@ v1_router.register(
 )
 
 urlpatterns = [
-    path('v1/users/me/',
-         current_user_get_update,
-         name='me',
-         ),
     path('v1/auth/signup/',
          user_create,
          name='signup',),
