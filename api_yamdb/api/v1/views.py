@@ -7,21 +7,20 @@ from django.shortcuts import get_object_or_404
 from rest_framework import filters, mixins, permissions, viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import LimitOffsetPagination
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 from reviews.models import Category, Genre, Title
 from users.models import User as UserModel
 
+from ..utils.auth_utils import send_confirmation_code
 from .filters import MyFilterBackend
-from .permissions import (AdminSuperuserModeratorAuthorOnly,
-                          AdminSuperuserOnly, AnonymousUserReadOnly)
+from .permissions import (AdminSuperuserModeratorAuthorOrReadOnly,
+                          AdminSuperuserOnly, AdminSuperuserOrReadOnly)
 from .serializers import (CategorySerializer, CommentSerializer,
                           ConfirmationCodeSerializer, GenreSerializer,
                           ReviewSerializer, TitleSerializerGet,
                           TitleSerializerPost, UserRegisterSerializer,
                           UserSerializer)
-from ..utils.auth_utils import send_confirmation_code
 
 User = get_user_model()
 
@@ -117,7 +116,7 @@ class CategoryViewSet(mixins.CreateModelMixin,
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     pagination_class = LimitOffsetPagination
-    permission_classes = (AnonymousUserReadOnly | AdminSuperuserOnly,)
+    permission_classes = (AdminSuperuserOrReadOnly,)
 
 
 class GenreViewSet(mixins.CreateModelMixin,
@@ -132,7 +131,7 @@ class GenreViewSet(mixins.CreateModelMixin,
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     pagination_class = LimitOffsetPagination
-    permission_classes = (AnonymousUserReadOnly | AdminSuperuserOnly,)
+    permission_classes = (AdminSuperuserOrReadOnly,)
 
 
 class TitleViewSet(viewsets.ModelViewSet):
@@ -141,7 +140,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     pagination_class = LimitOffsetPagination
     filter_backends = (MyFilterBackend,)
     filterset_fields = ('name', 'year', 'category', 'genre',)
-    permission_classes = (AnonymousUserReadOnly | AdminSuperuserOnly,)
+    permission_classes = (AdminSuperuserOrReadOnly,)
 
     def get_serializer_class(self):
         if self.action in ['list', 'retrieve']:
@@ -154,10 +153,7 @@ class CommentViewSet(viewsets.ModelViewSet):
     """Вьюсет для комментариев к произведениям."""
 
     serializer_class = CommentSerializer
-    permission_classes = (
-        IsAuthenticatedOrReadOnly,
-        AdminSuperuserModeratorAuthorOnly
-    )
+    permission_classes = (AdminSuperuserModeratorAuthorOrReadOnly,)
     pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
@@ -185,10 +181,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
     """Вьюсет для отзывов к произведениям."""
 
     serializer_class = ReviewSerializer
-    permission_classes = (
-        IsAuthenticatedOrReadOnly,
-        AdminSuperuserModeratorAuthorOnly,
-    )
+    permission_classes = (AdminSuperuserModeratorAuthorOrReadOnly,)
     pagination_class = LimitOffsetPagination
 
     def get_queryset(self):

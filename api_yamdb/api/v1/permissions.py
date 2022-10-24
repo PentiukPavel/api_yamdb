@@ -13,17 +13,20 @@ class AdminSuperuserOnly(permissions.BasePermission):
                 or request.user.is_superuser)
 
 
-class AnonymousUserReadOnly(permissions.BasePermission):
-    """Дает доступ анониму только для чтения.
+class AdminSuperuserOrReadOnly(permissions.BasePermission):
+    """Дает доступ только админу и суперюзеру джанго.
 
-    Доступ и к списку и объектам.
+    Остальным доступ только для чтения.
     """
 
     def has_permission(self, request, view):
-        return request.method in permissions.SAFE_METHODS
+        return (request.method in permissions.SAFE_METHODS
+                or request.user.is_authenticated
+                and request.user.is_admin
+                or request.user.is_superuser)
 
 
-class AdminSuperuserModeratorAuthorOnly(permissions.BasePermission):
+class AdminSuperuserModeratorAuthorOrReadOnly(permissions.BasePermission):
     """Дает полный доступ к объекту только админу, суперюзеру и автору.
 
     Доступ к списку и к объекту для чтения всем пользователям.
@@ -31,23 +34,14 @@ class AdminSuperuserModeratorAuthorOnly(permissions.BasePermission):
     У объекта должно быть поле author
     """
 
-    def has_object_permission(self, request, view, obj):
+    def has_permission(self, request, view):
         return (request.method in permissions.SAFE_METHODS
-                or (request.user.is_authenticated
-                    and request.user.is_superuser
-                    or request.user.is_admin
-                    or request.user.is_moderator
-                    or request.user == obj.author))
-
-
-class IsOwnerOrReadOnly(permissions.BasePermission):
-    """Дает доступ к объекту только владельцу.
-
-    Доступ к списку и к объекту для чтения всем пользователям.
-    Доступ к редактированию только владельцу.
-    """
+                or request.user.is_authenticated)
 
     def has_object_permission(self, request, view, obj):
         return (request.method in permissions.SAFE_METHODS
-                or (request.user.is_authenticated
-                    and request.user == obj.author))
+                or request.user.is_authenticated
+                and (request.user.is_superuser
+                     or request.user.is_admin
+                     or request.user.is_moderator
+                     or request.user == obj.author))
