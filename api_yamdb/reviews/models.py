@@ -169,6 +169,8 @@ class Review(models.Model):
         return f'{self.title} {self.author} {self.score}'
 
     class Meta:
+        verbose_name = 'Отзыв'
+        verbose_name_plural = 'Отзывы'
         constraints = [
             models.UniqueConstraint(
                 fields=['title', 'author'],
@@ -202,6 +204,10 @@ class Comment(models.Model):
         auto_now_add=True,
         db_index=True,
     )
+
+    class Meta:
+        verbose_name = 'Комментарий'
+        verbose_name_plural = 'Комментарии'
 
     def __str__(self):
         return f'{self.review} {self.author} {self.text}'

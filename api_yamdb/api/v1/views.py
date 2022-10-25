@@ -13,7 +13,7 @@ from reviews.models import Category, Genre, Title
 from users.models import User as UserModel
 
 from ..utils.auth_utils import send_confirmation_code
-from .filters import MyFilterBackend
+from .filters import TtileFilter
 from .permissions import (AdminSuperuserModeratorAuthorOrReadOnly,
                           AdminSuperuserOnly, AdminSuperuserOrReadOnly)
 from .serializers import (CategorySerializer, CommentSerializer,
@@ -138,7 +138,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     """Вьюсет для произведений."""
     queryset = Title.objects.annotate(rating=Avg('reviews__score')).all()
     pagination_class = LimitOffsetPagination
-    filter_backends = (MyFilterBackend,)
+    filterset_class = TtileFilter
     filterset_fields = ('name', 'year', 'category', 'genre',)
     permission_classes = (AdminSuperuserOrReadOnly,)
 
