@@ -1,5 +1,7 @@
 from django.contrib.auth import get_user_model
+from django.db.utils import IntegrityError
 from rest_framework import serializers
+from rest_framework.validators import ValidationError
 from reviews.models import Category, Comment, Genre, Review, Title
 
 User = get_user_model()
@@ -10,14 +12,29 @@ class UserRegisterSerializer(serializers.ModelSerializer):
 
     Позволяет создать пользователя только с разрешенными полями.
     """
+
+    def create(self, validated_data):
+        try:
+            instance, _ = self.Meta.model.objects.get_or_create(
+                **validated_data)
+        except IntegrityError as e:
+            raise ValidationError(e) from e
+        return instance
+
     class Meta:
         model = User
         fields = ('username', 'email',)
-        extra_kwargs = {'username': {'required': True},
-                        'email': {'required': True}}
+        extra_kwargs = {
+            'username': {
+                'validators': [],
+            },
+            'email': {
+                'validators': [],
+            },
+        }
 
     def validate_username(self, username):
-        if username == 'me':
+        if username.lower() == 'me':
             raise serializers.ValidationError(
                 'Выберите другой юзернейм')
         return username
@@ -30,14 +47,6 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ('username', 'email', 'first_name',
                   'last_name', 'bio', 'role',)
-        extra_kwargs = {'username': {'required': True},
-                        'email': {'required': True}}
-
-    def validate_username(self, username):
-        if username == 'me':
-            raise serializers.ValidationError(
-                'Выберите другой юзернейм')
-        return username
 
 
 class ConfirmationCodeSerializer(serializers.Serializer):

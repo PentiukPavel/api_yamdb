@@ -2,47 +2,27 @@ from http import HTTPStatus
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
-from django.shortcuts import get_object_or_404
 from django.db.models import Avg
+from django.shortcuts import get_object_or_404
 from rest_framework import filters, mixins, permissions, viewsets
+from rest_framework.decorators import action
 from rest_framework.pagination import LimitOffsetPagination
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 from reviews.models import Category, Genre, Title
 from users.models import User as UserModel
 
+from ..utils.auth_utils import send_confirmation_code
 from .filters import MyFilterBackend
-from .permissions import (AdminSuperuserModeratorAuthorOnly,
-                          AdminSuperuserOnly, AnonymousUserReadOnly)
+from .permissions import (AdminSuperuserModeratorAuthorOrReadOnly,
+                          AdminSuperuserOnly, AdminSuperuserOrReadOnly)
 from .serializers import (CategorySerializer, CommentSerializer,
                           ConfirmationCodeSerializer, GenreSerializer,
                           ReviewSerializer, TitleSerializerGet,
                           TitleSerializerPost, UserRegisterSerializer,
                           UserSerializer)
-from .utils.auth_utils import send_confirmation_code
 
 User = get_user_model()
-
-
-class CurrentUserViewSet(viewsets.ViewSet):
-    """Вьюсет для получения и обновления информации о текущем юзере."""
-
-    serializer_class = UserSerializer
-
-    def retrieve(self, request, pk=None):
-        serializer = self.serializer_class(request.user)
-        return Response(serializer.data)
-
-    def partial_update(self, request, pk=None):
-        serializer = self.serializer_class(
-            request.user, data=request.data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        if request.user.role == UserModel.ADMIN:
-            serializer.save()
-        else:
-            serializer.save(role=request.user.role)
-        return Response(serializer.data, status=HTTPStatus.OK)
 
 
 class UserRegisterViewSet(viewsets.GenericViewSet):
@@ -55,17 +35,9 @@ class UserRegisterViewSet(viewsets.GenericViewSet):
     permission_classes = (permissions.AllowAny,)
 
     def create(self, request):
-        username = request.data.get('username')
-        email = request.data.get('email')
-
-        if User.objects.filter(username=username, email=email).exists():
-            user = User.objects.get(username=username, email=email)
-            serializer = self.get_serializer(user)
-        else:
-            serializer = self.get_serializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            user = serializer.save()
-
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
         confirmation_code = default_token_generator.make_token(user)
         send_confirmation_code(user, confirmation_code)
 
@@ -103,12 +75,33 @@ class TokenCreateViewSet(viewsets.GenericViewSet):
 class UserViewSet(viewsets.ModelViewSet):
     """Вьюсет для получения и обновления информации о пользователях."""
 
-    queryset = User.objects.all()
+    queryset = User.objects.all().order_by('date_joined')
     serializer_class = UserSerializer
     permission_classes = (AdminSuperuserOnly, )
     filter_backends = (filters.SearchFilter, )
     lookup_field = 'username'
     search_fields = ('username',)
+
+    @action(detail=False,
+            methods=['get', 'patch'],
+            url_path='me',
+            url_name='me',
+            permission_classes=(permissions.IsAuthenticated,))
+    def get_patch_current_user_data(self, request):
+        """Метод для получения и обновления информации о текущем юзере."""
+        if request.method == 'PATCH':
+            serializer = self.serializer_class(
+                request.user, data=request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            if request.user.role == UserModel.ADMIN:
+                serializer.save()
+            else:
+                serializer.save(role=request.user.role)
+
+        if request.method == 'GET':
+            serializer = self.serializer_class(request.user)
+
+        return Response(serializer.data, status=HTTPStatus.OK)
 
 
 class CategoryViewSet(mixins.CreateModelMixin,
@@ -123,7 +116,7 @@ class CategoryViewSet(mixins.CreateModelMixin,
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     pagination_class = LimitOffsetPagination
-    permission_classes = (AnonymousUserReadOnly | AdminSuperuserOnly,)
+    permission_classes = (AdminSuperuserOrReadOnly,)
 
 
 class GenreViewSet(mixins.CreateModelMixin,
@@ -138,7 +131,7 @@ class GenreViewSet(mixins.CreateModelMixin,
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     pagination_class = LimitOffsetPagination
-    permission_classes = (AnonymousUserReadOnly | AdminSuperuserOnly,)
+    permission_classes = (AdminSuperuserOrReadOnly,)
 
 
 class TitleViewSet(viewsets.ModelViewSet):
@@ -147,7 +140,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     pagination_class = LimitOffsetPagination
     filter_backends = (MyFilterBackend,)
     filterset_fields = ('name', 'year', 'category', 'genre',)
-    permission_classes = (AnonymousUserReadOnly | AdminSuperuserOnly,)
+    permission_classes = (AdminSuperuserOrReadOnly,)
 
     def get_serializer_class(self):
         if self.action in ['list', 'retrieve']:
@@ -160,10 +153,7 @@ class CommentViewSet(viewsets.ModelViewSet):
     """Вьюсет для комментариев к произведениям."""
 
     serializer_class = CommentSerializer
-    permission_classes = (
-        IsAuthenticatedOrReadOnly,
-        AdminSuperuserModeratorAuthorOnly
-    )
+    permission_classes = (AdminSuperuserModeratorAuthorOrReadOnly,)
     pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
@@ -191,10 +181,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
     """Вьюсет для отзывов к произведениям."""
 
     serializer_class = ReviewSerializer
-    permission_classes = (
-        IsAuthenticatedOrReadOnly,
-        AdminSuperuserModeratorAuthorOnly,
-    )
+    permission_classes = (AdminSuperuserModeratorAuthorOrReadOnly,)
     pagination_class = LimitOffsetPagination
 
     def get_queryset(self):

@@ -12,6 +12,8 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
+YAMDB_EMAIL = 'yamdb.yamdb.fake'
+
 AUTH_USER_MODEL = 'users.User'
 
 # Application definition

@@ -27,3 +27,15 @@ class User(AbstractUser):
         null=False,
     )
     email = models.EmailField(unique=True)
+
+    @property
+    def is_admin(self):
+        return self.role == User.ADMIN
+
+    @property
+    def is_moderator(self):
+        return self.role == User.MODERATOR
+
+    @property
+    def is_user(self):
+        return self.role == User.USER
