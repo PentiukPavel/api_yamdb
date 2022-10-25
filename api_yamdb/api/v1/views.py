@@ -9,7 +9,7 @@ from rest_framework.decorators import action
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
-from reviews.models import Category, Genre, Title
+from reviews.models import Category, Genre, Title, Review
 from users.models import User as UserModel
 
 from ..utils.auth_utils import send_confirmation_code
@@ -162,7 +162,7 @@ class CommentViewSet(viewsets.ModelViewSet):
         review_id = self.kwargs.get('review_id')
 
         title = get_object_or_404(Title, id=title_id)
-        review = title.reviews.get(id=review_id)
+        review = get_object_or_404(Review, id=review_id, title=title)
 
         return review.comments.all()
 
@@ -172,7 +172,7 @@ class CommentViewSet(viewsets.ModelViewSet):
         review_id = self.kwargs.get('review_id')
 
         title = get_object_or_404(Title, id=title_id)
-        review = title.reviews.get(id=review_id)
+        review = get_object_or_404(Review, id=review_id, title=title)
 
         serializer.save(author=self.request.user, review=review)
 
@@ -189,6 +189,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
         title_id = self.kwargs.get('title_id')
 
         title = get_object_or_404(Title, id=title_id)
+
         return title.reviews.all()
 
     def perform_create(self, serializer):
