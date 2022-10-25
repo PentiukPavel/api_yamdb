@@ -24,14 +24,6 @@ class UserRegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('username', 'email',)
-        extra_kwargs = {
-            'username': {
-                'validators': [],
-            },
-            'email': {
-                'validators': [],
-            },
-        }
 
     def validate_username(self, username):
         if username.lower() == 'me':
