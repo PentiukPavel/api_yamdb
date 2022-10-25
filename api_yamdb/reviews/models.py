@@ -25,6 +25,10 @@ class Category(models.Model):
         unique=True,
     )
 
+    class Meta:
+        verbose_name = 'Категория'
+        verbose_name_plural = 'Категории'
+
     def __str__(self):
         return self.name
 
@@ -45,6 +49,10 @@ class Genre(models.Model):
         null=False,
         unique=True,
     )
+
+    class Meta:
+        verbose_name = 'Жанр'
+        verbose_name_plural = 'Жанры'
 
     def __str__(self):
         return self.name
@@ -87,6 +95,10 @@ class Title(models.Model):
         through='GenreTitle',
     )
 
+    class Meta:
+        verbose_name = 'Произведение'
+        verbose_name_plural = 'Произведения'
+
     def __str__(self):
         return self.name
 
@@ -103,6 +115,10 @@ class GenreTitle(models.Model):
         on_delete=models.CASCADE,
         related_name='genre'
     )
+
+    class Meta:
+        verbose_name = 'Жанр произведения'
+        verbose_name_plural = 'Жанры произведений'
 
     def __str__(self):
         return f'{self.title} {self.genre}'
@@ -153,6 +169,8 @@ class Review(models.Model):
         return f'{self.title} {self.author} {self.score}'
 
     class Meta:
+        verbose_name = 'Отзыв'
+        verbose_name_plural = 'Отзывы'
         constraints = [
             models.UniqueConstraint(
                 fields=['title', 'author'],
@@ -186,6 +204,10 @@ class Comment(models.Model):
         auto_now_add=True,
         db_index=True,
     )
+
+    class Meta:
+        verbose_name = 'Комментарий'
+        verbose_name_plural = 'Комментарии'
 
     def __str__(self):
         return f'{self.review} {self.author} {self.text}'

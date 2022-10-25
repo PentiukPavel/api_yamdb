@@ -9,10 +9,10 @@ from rest_framework.decorators import action
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
-from reviews.models import Category, Genre, Title
+from reviews.models import Category, Genre, Title, Review
 
 from ..utils.auth_utils import send_confirmation_code
-from .filters import MyFilterBackend
+from .filters import TtileFilter
 from .permissions import (AdminSuperuserModeratorAuthorOrReadOnly,
                           AdminSuperuserOnly, AdminSuperuserOrReadOnly)
 from .serializers import (CategorySerializer, CommentSerializer,
@@ -134,7 +134,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     """Вьюсет для произведений."""
     queryset = Title.objects.annotate(rating=Avg('reviews__score')).all()
     pagination_class = LimitOffsetPagination
-    filter_backends = (MyFilterBackend,)
+    filterset_class = TtileFilter
     filterset_fields = ('name', 'year', 'category', 'genre',)
     permission_classes = (AdminSuperuserOrReadOnly,)
 
@@ -158,7 +158,7 @@ class CommentViewSet(viewsets.ModelViewSet):
         review_id = self.kwargs.get('review_id')
 
         title = get_object_or_404(Title, id=title_id)
-        review = title.reviews.get(id=review_id)
+        review = get_object_or_404(Review, id=review_id, title=title)
 
         return review.comments.all()
 
@@ -168,7 +168,7 @@ class CommentViewSet(viewsets.ModelViewSet):
         review_id = self.kwargs.get('review_id')
 
         title = get_object_or_404(Title, id=title_id)
-        review = title.reviews.get(id=review_id)
+        review = get_object_or_404(Review, id=review_id, title=title)
 
         serializer.save(author=self.request.user, review=review)
 
@@ -185,11 +185,12 @@ class ReviewViewSet(viewsets.ModelViewSet):
         title_id = self.kwargs.get('title_id')
 
         title = get_object_or_404(Title, id=title_id)
+
         return title.reviews.all()
 
     def perform_create(self, serializer):
         """Добавление автора отзыва и произведения."""
         title_id = self.kwargs.get('title_id')
-
         title = get_object_or_404(Title, id=title_id)
+
         serializer.save(author=self.request.user, title=title)

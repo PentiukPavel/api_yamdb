@@ -61,9 +61,6 @@ class CategorySerializer(serializers.HyperlinkedModelSerializer):
         model = Category
         fields = ('name', 'slug',)
         lookup_field = 'slug'
-        extra_kwargs = {
-            'url': {'lookup_field': 'slug'}
-        }
 
 
 class GenreSerializer(serializers.HyperlinkedModelSerializer):
@@ -73,9 +70,6 @@ class GenreSerializer(serializers.HyperlinkedModelSerializer):
         model = Genre
         fields = ('name', 'slug',)
         lookup_field = ('slug')
-        extra_kwargs = {
-            'url': {'lookup_field': 'slug'}
-        }
 
 
 class TitleSerializerPost(serializers.ModelSerializer):
@@ -129,18 +123,17 @@ class ReviewSerializer(serializers.ModelSerializer):
         read_only=True
     )
 
-    def create(self, validated_data):
-        """Проверка на наличие отзыва от пользователя."""
-        user = self.context['request'].user
-        title = validated_data.get('title')
-
-        if Review.objects.filter(author=user, title=title).exists():
-            raise serializers.ValidationError(
-                'Вы уже оставили отзыв на этот произведение')
-
-        return Review.objects.create(**validated_data)
+    def validate(self, data):
+        """Проверка на возможность создания отзыва."""
+        request = self.context.get('request')
+        if request.method == 'POST':
+            title_id = self.context.get('view').kwargs.get('title_id')
+            if Review.objects.filter(
+                    author=request.user, title=title_id).exists():
+                raise serializers.ValidationError(
+                    'Вы уже оставили отзыв на это произведение')
+        return data
 
     class Meta:
         model = Review
         fields = ('id', 'text', 'author', 'score', 'pub_date',)
-        read_only_fields = ('title',)
