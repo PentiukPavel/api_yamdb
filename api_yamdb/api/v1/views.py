@@ -10,7 +10,6 @@ from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 from reviews.models import Category, Genre, Title, Review
-from users.models import User as UserModel
 
 from ..utils.auth_utils import send_confirmation_code
 from .filters import TtileFilter
@@ -93,10 +92,7 @@ class UserViewSet(viewsets.ModelViewSet):
             serializer = self.serializer_class(
                 request.user, data=request.data, partial=True)
             serializer.is_valid(raise_exception=True)
-            if request.user.role == UserModel.ADMIN:
-                serializer.save()
-            else:
-                serializer.save(role=request.user.role)
+            serializer.save(role=request.user.role, partial=True)
 
         if request.method == 'GET':
             serializer = self.serializer_class(request.user)
