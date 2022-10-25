@@ -60,9 +60,6 @@ class CategorySerializer(serializers.HyperlinkedModelSerializer):
         model = Category
         fields = ('name', 'slug',)
         lookup_field = 'slug'
-        extra_kwargs = {
-            'url': {'lookup_field': 'slug'}
-        }
 
 
 class GenreSerializer(serializers.HyperlinkedModelSerializer):
@@ -72,9 +69,6 @@ class GenreSerializer(serializers.HyperlinkedModelSerializer):
         model = Genre
         fields = ('name', 'slug',)
         lookup_field = ('slug')
-        extra_kwargs = {
-            'url': {'lookup_field': 'slug'}
-        }
 
 
 class TitleSerializerPost(serializers.ModelSerializer):

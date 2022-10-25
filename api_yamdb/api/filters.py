@@ -1,24 +1,15 @@
-from rest_framework.filters import BaseFilterBackend
+from django_filters import CharFilter, FilterSet
+
+from reviews.models import Title
 
 
-class MyFilterBackend(BaseFilterBackend):
+class TtileFilter(FilterSet):
     """Фильтр по произведениям."""
+    genre = CharFilter(field_name='genre__slug', lookup_expr='exact')
+    category = CharFilter(field_name='category__slug', lookup_expr='exact')
+    name = CharFilter(field_name='name', lookup_expr='contains')
+    year = CharFilter(field_name='year', lookup_expr='exact')
 
-    def filter_queryset(self, request, queryset, view):
-        if 'category' in request.query_params:
-            queryset = queryset.filter(
-                category__slug=request.query_params.get('category')
-            )
-        if 'genre' in request.query_params:
-            queryset = queryset.filter(
-                genre__slug=request.query_params.get('genre')
-            )
-        if 'year' in request.query_params:
-            queryset = queryset.filter(
-                year=request.query_params.get('year')
-            )
-        if 'name' in request.query_params:
-            queryset = queryset.filter(
-                name__contains=request.query_params.get('name')
-            )
-        return queryset
+    class Meta:
+        model = Title
+        fields = ['category', 'genre', 'year', 'name', ]
