@@ -131,6 +131,17 @@ class ReviewSerializer(serializers.ModelSerializer):
         read_only=True
     )
 
+    def validate(self, data):
+        """Проверка на возможность создания отзыва."""
+        request = self.context.get('request')
+        if request.method == 'POST':
+            title_id = self.context.get('view').kwargs.get('title_id')
+            if Review.objects.filter(
+                    author=request.user, title=title_id).exists():
+                raise serializers.ValidationError(
+                    'Вы уже оставили отзыв на это произведение')
+        return data
+
     class Meta:
         model = Review
         fields = ('id', 'text', 'author', 'score', 'pub_date',)
