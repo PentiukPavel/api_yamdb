@@ -91,4 +91,4 @@ GET /api/v1/titles/{title_id}/reviews/{review_id}/comments/
 
 - Пеньтюк Павел [Github](https://github.com/PentiukPavel)
 - Нурмухамбетов Амир [Github](https://github.com/Hereugo)
-- Вячеслав Александр [Github](https://github.com/valexandro)
+- Вячеслав Александров [Github](https://github.com/valexandro)
